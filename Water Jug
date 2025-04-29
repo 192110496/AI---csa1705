@@ -1,0 +1,58 @@
+from collections import deque
+
+def is_goal(state, target):
+    return state[0] == target or state[1] == target
+
+def reconstruct_path(parent, state):
+    path = []
+    while state is not None:
+        path.append(state)
+        state = parent.get(state)
+    path.reverse()
+    return path
+
+def water_jug_bfs(jug1, jug2, target):
+    visited = set()
+    queue = deque()
+    parent = {}
+
+    # Initial state: both jugs are empty
+    start = (0, 0)
+    queue.append(start)
+    visited.add(start)
+    parent[start] = None
+
+    while queue:
+        a, b = queue.popleft()
+
+        if is_goal((a, b), target):
+            path = reconstruct_path(parent, (a, b))
+            print("Solution path:")
+            for step in path:
+                print(step)
+            return
+
+        # Generate all possible next states
+        next_states = [
+            (jug1, b),                      # Fill jug1
+            (a, jug2),                      # Fill jug2
+            (0, b),                         # Empty jug1
+            (a, 0),                         # Empty jug2
+            (min(a + b, jug1), b - (min(a + b, jug1) - a)),  # Pour B -> A
+            (a - (min(a + b, jug2) - b), min(a + b, jug2)),  # Pour A -> B
+        ]
+
+        for state in next_states:
+            if state not in visited:
+                visited.add(state)
+                parent[state] = (a, b)
+                queue.append(state)
+
+    print("No solution found.")
+
+# Example usage
+jug1_capacity = 4
+jug2_capacity = 3
+target_amount = 2
+
+water_jug_bfs(jug1_capacity, jug2_capacity, target_amount)
