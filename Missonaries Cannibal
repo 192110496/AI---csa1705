@@ -1,0 +1,87 @@
+from collections import deque
+
+# Define the state as a tuple: (missionaries_left, cannibals_left, boat_position)
+# boat_position = 1 (left side), 0 (right side)
+
+def is_valid(m, c):
+    """Check if the state is valid."""
+    return (0 <= m <= 3) and (0 <= c <= 3)
+
+def is_safe(m_left, c_left, m_right, c_right):
+    """Check if missionaries are not outnumbered by cannibals on either side."""
+    return ((m_left == 0 or m_left >= c_left) and
+            (m_right == 0 or m_right >= c_right))
+
+def successors(state):
+    """Generate valid successor states."""
+    m_left, c_left, boat = state
+    successors = []
+    if boat == 1:  # Boat on left side
+        direction = -1
+    else:  # Boat on right side
+        direction = 1
+
+    # Possible moves: (missionaries, cannibals)
+    moves = [(2, 0), (0, 2), (1, 0), (0, 1), (1, 1)]
+
+    for m, c in moves:
+        if boat == 1:  # moving from left to right
+            new_m_left = m_left - m
+            new_c_left = c_left - c
+            new_m_right = 3 - new_m_left
+            new_c_right = 3 - new_c_left
+        else:  # moving from right to left
+            new_m_left = m_left + m
+            new_c_left = c_left + c
+            new_m_right = 3 - new_m_left
+            new_c_right = 3 - new_c_left
+
+        if (is_valid(new_m_left, new_c_left) and
+            is_valid(new_m_right, new_c_right) and
+            is_safe(new_m_left, new_c_left, new_m_right, new_c_right)):
+            new_state = (new_m_left, new_c_left, 1 - boat)
+            successors.append(new_state)
+    return successors
+
+def bfs():
+    """Solve the problem using Breadth-First Search."""
+    initial_state = (3, 3, 1)  # All missionaries and cannibals on the left side
+    goal_state = (0, 0, 0)     # All on the right side
+
+    queue = deque()
+    queue.append((initial_state, [initial_state]))  # (current_state, path)
+
+    visited = set()
+    visited.add(initial_state)
+
+    while queue:
+        current_state, path = queue.popleft()
+
+        if current_state == goal_state:
+            return path
+
+        for next_state in successors(current_state):
+            if next_state not in visited:
+                visited.add(next_state)
+                queue.append((next_state, path + [next_state]))
+
+    return None  # No solution found
+
+def print_solution(path):
+    print("Solution found in {} steps:\n".format(len(path) - 1))
+    for step, state in enumerate(path):
+        m_left, c_left, boat = state
+        m_right = 3 - m_left
+        c_right = 3 - c_left
+        boat_pos = "Left" if boat == 1 else "Right"
+        print(f"Step {step}:")
+        print(f"  Left shore -> Missionaries: {m_left}, Cannibals: {c_left}")
+        print(f"  Right shore -> Missionaries: {m_right}, Cannibals: {c_right}")
+        print(f"  Boat is on the {boat_pos} side\n")
+
+if __name__ == "__main__":
+    solution = bfs()
+    if solution:
+        print_solution(solution)
+    else:
+        print("No solution found.")
