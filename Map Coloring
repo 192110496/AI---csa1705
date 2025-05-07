@@ -1,0 +1,35 @@
+from collections import defaultdict
+
+def backtrack(assignment, variables, domains, neighbors, constraints):
+    if len(assignment) == len(variables):
+        return assignment
+    unassigned = [v for v in variables if v not in assignment]
+    var = unassigned[0]
+    for value in domains[var]:
+        local_assignment = assignment.copy()
+        local_assignment[var] = value
+        if all(constraints(var, value, n, local_assignment.get(n)) for n in neighbors[var] if n in local_assignment):
+            result = backtrack(local_assignment, variables, domains, neighbors, constraints)
+            if result:
+                return result
+    return None
+
+def consistent(var1, val1, var2, val2):
+    return val1 != val2
+
+def csp(variables, domains, neighbors):
+    return backtrack({}, variables, domains, neighbors, consistent)
+
+variables = ['WA', 'NT', 'SA', 'Q', 'NSW', 'V', 'T']
+domains = {v: ['Red', 'Green', 'Blue'] for v in variables}
+neighbors = defaultdict(list)
+neighbors['WA'] = ['NT', 'SA']
+neighbors['NT'] = ['WA', 'SA', 'Q']
+neighbors['SA'] = ['WA', 'NT', 'Q', 'NSW', 'V']
+neighbors['Q'] = ['NT', 'SA', 'NSW']
+neighbors['NSW'] = ['SA', 'Q', 'V']
+neighbors['V'] = ['SA', 'NSW']
+neighbors['T'] = []
+
+solution = csp(variables, domains, neighbors)
+print(solution)
